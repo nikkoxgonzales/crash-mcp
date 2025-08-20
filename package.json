@@ -1,0 +1,49 @@
+{
+  "name": "crash-mcp",
+  "version": "2.0.0",
+  "description": "MCP server for CRASH - Cascaded Reasoning with Adaptive Step Handling",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "crash-mcp": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc && chmod +x dist/index.js",
+    "start": "node dist/index.js",
+    "dev": "npx @modelcontextprotocol/inspector dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "crash",
+    "cascaded-reasoning",
+    "adaptive-step-handling",
+    "problem-solving",
+    "structured-thinking",
+    "llm",
+    "ai"
+  ],
+  "author": {
+    "name": "Nikko Gonzales",
+    "email": "nikkoxgonzales@gmail.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.17.3",
+    "chalk": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "typescript": "^5.8.3"
+  }
+}
