@@ -4,6 +4,11 @@
 
 CRASH (Cascaded Reasoning with Adaptive Step Handling) v2.0 is an advanced MCP tool for structured, iterative reasoning. It has been significantly enhanced from its original version to provide flexible validation, confidence tracking, revision mechanisms, and branching support.
 
+**📦 Public Availability:**
+- **npm Package**: `crash-mcp` - Available for installation via `npm install crash-mcp` or direct usage with `npx crash-mcp`
+- **GitHub Repository**: [https://github.com/nikkoxgonzales/crash-mcp](https://github.com/nikkoxgonzales/crash-mcp)
+- **Open Source**: MIT Licensed, contributions welcome
+
 ## When to Use CRASH
 
 The LLM should use CRASH when:
@@ -68,6 +73,38 @@ Structured actions for tool integration
 - **Standard**: analysis, action, reflection, decision, summary
 - **Extended**: validation, exploration, hypothesis, correction, planning
 - **Custom**: Any descriptive string in flexible mode
+
+## Installation & Setup
+
+### For LLM Use in Claude Desktop
+
+Add to Claude Desktop configuration:
+
+```json
+{
+  "mcpServers": {
+    "crash": {
+      "command": "npx",
+      "args": ["-y", "crash-mcp"],
+      "env": {
+        "CRASH_STRICT_MODE": "false",
+        "CRASH_OUTPUT_FORMAT": "console",
+        "MAX_HISTORY_SIZE": "100"
+      }
+    }
+  }
+}
+```
+
+### Direct Installation
+
+```bash
+# Install globally
+npm install -g crash-mcp
+
+# Or use directly
+npx crash-mcp
+```
 
 ## Configuration
 
