@@ -111,3 +111,6 @@ Thumbs.db
 
 # Test files
 test-crash.js
+
+# Private documentation
+CLAUDE.md
