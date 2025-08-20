@@ -36,7 +36,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/nikkoxgonzales/crash-mcp.git"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.17.3",
