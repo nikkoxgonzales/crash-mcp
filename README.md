@@ -7,7 +7,7 @@ An advanced MCP (Model Context Protocol) server that facilitates structured, ite
 ---
 ## Why I made this?
 
-To be honest, I made this because it's hard to say "use sequential_thinking", now I just say "use crash..". :)
+Frankly, I created this because typing "use sequential_thinking" was cumbersome. Now I can simply say "use crash" instead! :)
 
 ## Claude Code's Experience
 ```
