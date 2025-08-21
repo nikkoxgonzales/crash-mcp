@@ -2,12 +2,10 @@
 
 An advanced MCP (Model Context Protocol) server that facilitates structured, iterative reasoning for complex problem-solving and analysis. CRASH v2.0 introduces flexible validation, confidence tracking, revision mechanisms, and branching support while maintaining backward compatibility.
 
-# Claude Code Response
-
+## Claude Code's Experience
+```
 ## Question
 > /ask is running… does crash mcp helped you or you could have done better with your internal planning mechanisms?
-
-## Claude Code's Response
 
 ● CRASH MCP helped significantly for this specific task. Here's my honest assessment:
 
@@ -24,6 +22,7 @@ The key difference:
 CRASH forced me to be more thorough in the analysis phase. Without it, I might have rushed to implement the first solution that came to mind (like using Union[str, dict] parameters) rather than exploring the cleaner parse_tool_input() helper approach.
 
 Verdict: CRASH added value here because this was a complex problem requiring systematic analysis of multiple solution paths. For simpler coding tasks, my internal planning would be sufficient and faster.
+```
 
 ## 🚀 Key Features
 
