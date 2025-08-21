@@ -89,6 +89,11 @@ Run this command. See [Claude Code MCP docs](https://docs.anthropic.com/en/docs/
 claude mcp add crash -- npx -y crash-mcp
 ```
 
+or if you are using powershell:
+```sh
+claude mcp add crash '--' npx -y crash-mcp
+```
+
 </details>
 
 <details>
