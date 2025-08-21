@@ -1,6 +1,6 @@
 # CRASH - Cascaded Reasoning with Adaptive Step Handling
 
-`"Use crash to ...`
+`"Use crash to ..."`
 
 An advanced MCP (Model Context Protocol) server that facilitates structured, iterative reasoning for complex problem-solving and analysis. CRASH v2.0 introduces flexible validation, confidence tracking, revision mechanisms, and branching support while maintaining backward compatibility.
 
