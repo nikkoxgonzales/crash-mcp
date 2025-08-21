@@ -3,7 +3,11 @@
 An advanced MCP (Model Context Protocol) server that facilitates structured, iterative reasoning for complex problem-solving and analysis. CRASH v2.0 introduces flexible validation, confidence tracking, revision mechanisms, and branching support while maintaining backward compatibility.
 
 > Heavily inspired by [MCP Sequential Thinking Server](https://github.com/modelcontextprotocol/servers/blob/main/src/sequentialthinking)
-> Honestly, I made this because it's hard to say "use sequential_thinking", now I just say "use crash..". :)
+
+---
+## Why I made this?
+
+To be honest, I made this because it's hard to say "use sequential_thinking", now I just say "use crash..". :)
 
 ## Claude Code's Experience
 ```
