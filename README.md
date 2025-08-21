@@ -12,7 +12,7 @@ To be honest, I made this because it's hard to say "use sequential_thinking", no
 ## Claude Code's Experience
 ```
 ## Question
-> /ask is running… does crash mcp helped you or you could have done better with your internal planning mechanisms?
+> /ask is running… Did the CRASH-MCP actually help you, or would you have been better off using your internal planning mechanisms?
 
 ● CRASH MCP helped significantly for this specific task. Here's my honest assessment:
 
