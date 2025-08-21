@@ -38,19 +38,6 @@ npx crash-mcp
 - Cursor, Claude Code, VSCode, Windsurf or another MCP Client
 
 <details>
-<summary><b>Installing via Smithery</b></summary>
-
-To install CRASH MCP Server for any client automatically via [Smithery](https://smithery.ai):
-
-```bash
-npx -y @smithery/cli@latest install crash-mcp --client <CLIENT_NAME> --key <YOUR_SMITHERY_KEY>
-```
-
-You can find your Smithery key in the [Smithery.ai webpage](https://smithery.ai).
-
-</details>
-
-<details>
 <summary><b>Install in Cursor</b></summary>
 
 Go to: `Settings` -> `Cursor Settings` -> `MCP` -> `Add new global MCP server`
