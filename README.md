@@ -1,4 +1,5 @@
-# CRASH - Cascaded Reasoning with Adaptive Step Handling
+# Cascaded Reasoning with Adaptive Step Handling
+## a.k.a CRASH
 
 `"Use crash to ..."`
 
