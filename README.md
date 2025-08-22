@@ -9,7 +9,11 @@ An advanced MCP (Model Context Protocol) server that facilitates structured, ite
 ---
 ## Why I made this?
 
-Frankly, I created this because typing "use sequential_thinking" was cumbersome. Now I can simply say "use crash" instead! :)
+Frankly, I created this because typing "use sequential_thinking" was cumbersome. Now I can simply say "use crash" instead!
+
+That was just the starting point though. CRASH is a modified version of sequential thinking with token-efficiency as its core design principle. It's more streamlined in its prompting approach - it doesn't include codes in thoughts and doesn't require the agent to list all available tools, etc.
+
+I've had great experience with CRASH so far and have completely replaced sequential thinking in my workflow. It's now my go-to solution whenever an agent can't solve an issue in one shot or even when plan mode falls short. 
 
 ## Claude Code's Experience
 ```
