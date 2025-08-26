@@ -1071,7 +1071,7 @@ For errors like `Error: Cannot find module`, try the `--experimental-vm-modules`
 
 | Feature | CRASH v2.0 | Sequential Thinking |
 |---------|------------|-------------------|
-| Structure | Flexible, configurable | May be more rigid |
+| Structure | Flexible, configurable | Rigid |
 | Validation | Optional prefixes | Depends on implementation |
 | Revisions | Built-in support | Varies |
 | Branching | Native branching | Varies |
