@@ -977,12 +977,6 @@ In strict mode:
 - Only predefined purpose types allowed
 - Original validation rules enforced
 
-### Migration Guide
-
-1. **From v1.x to v2.0**: No changes required - fully backward compatible
-2. **To use new features**: Set `CRASH_STRICT_MODE=false` (default)
-3. **Gradual adoption**: Enable features individually through configuration
-
 ## 🏗️ Development
 
 ```bash
@@ -1069,7 +1063,7 @@ For errors like `Error: Cannot find module`, try the `--experimental-vm-modules`
 
 ## 🔍 Comparison with Sequential Thinking
 
-| Feature | CRASH v2.0 | Sequential Thinking |
+| Feature | CRASH | Sequential Thinking |
 |---------|------------|-------------------|
 | Structure | Flexible, configurable | Rigid |
 | Validation | Optional prefixes | ❌ None |
