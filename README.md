@@ -1072,12 +1072,12 @@ For errors like `Error: Cannot find module`, try the `--experimental-vm-modules`
 | Feature | CRASH v2.0 | Sequential Thinking |
 |---------|------------|-------------------|
 | Structure | Flexible, configurable | Rigid |
-| Validation | Optional prefixes | None |
+| Validation | Optional prefixes | ❌ None |
 | Revisions | Built-in support | Varies |
 | Branching | Native branching | Varies |
-| Confidence | Explicit tracking | None |
-| Tool Integration | Structured actions | None |
-| Token Efficiency | Optimized, no code in thoughts | None |
+| Confidence | Explicit tracking | ❌ None |
+| Tool Integration | Structured actions | ❌ None |
+| Token Efficiency | Optimized, no code in thoughts | ❌ None |
 | Output Formats | Multiple (console, JSON, MD) | Varies |
 
 ## 📊 Performance
