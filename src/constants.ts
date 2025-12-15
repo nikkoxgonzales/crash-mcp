@@ -31,6 +31,12 @@ export const COMPLETION_PHRASES = [
   'Solution found'
 ] as const;
 
+// Pre-computed lowercase completion phrases for O(1) matching
+export const COMPLETION_PHRASES_LOWER = COMPLETION_PHRASES.map(p => p.toLowerCase());
+
+// Pre-computed Set for O(1) purpose validation
+export const VALID_PURPOSES_SET = new Set(VALID_PURPOSES.map(p => p.toLowerCase()));
+
 // Purpose-to-color mapping for console output
 export const PURPOSE_COLORS: Record<string, typeof chalk.blue> = {
   analysis: chalk.blue,
