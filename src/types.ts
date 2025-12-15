@@ -39,6 +39,10 @@ export interface CrashStep {
   // Revision support
   revises_step?: number;
   revision_reason?: string;
+  revised_by?: number; // Step number that revised this step
+
+  // Completion
+  is_final_step?: boolean;
   
   // Branching support
   branch_from?: number;
@@ -66,6 +70,7 @@ export interface Branch {
   steps: CrashStep[];
   status: 'active' | 'merged' | 'abandoned';
   created_at: string;
+  depth: number; // Branch depth level (1 = first level branch)
 }
 
 // Enhanced history with branching support
@@ -84,19 +89,8 @@ export interface CrashHistory {
   };
 }
 
-// Session management
-export interface CrashSession {
-  id: string;
+// Session entry with timestamp for timeout management
+export interface SessionEntry {
   history: CrashHistory;
-  config: any; // Reference to config used
-  created_at: string;
-  last_active: string;
-}
-
-// Export formats
-export interface ExportOptions {
-  format: 'json' | 'markdown' | 'text';
-  include_metadata: boolean;
-  include_branches: boolean;
-  compact: boolean;
+  lastAccessed: number; // Unix timestamp in milliseconds
 }
