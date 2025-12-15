@@ -4,7 +4,8 @@ import { CrashFormatter } from './formatter.js';
 import {
   VALID_PREFIXES,
   VALID_PURPOSES,
-  COMPLETION_PHRASES,
+  VALID_PURPOSES_SET,
+  COMPLETION_PHRASES_LOWER,
   REQUIRED_STEP_FIELDS,
   CONFIDENCE_MIN,
   CONFIDENCE_MAX,
@@ -25,6 +26,8 @@ export class CrashServer {
   private stepNumbers: Set<number> = new Set();
   // Performance optimization: tools used as Set for efficient deduplication
   private toolsUsedSet: Set<string> = new Set();
+  // Performance optimization: O(1) step-to-branch lookup
+  private stepToBranchMap: Map<number, string> = new Map();
   // Session cleanup counter for batched cleanup
   private stepsSinceCleanup: number = 0;
 
@@ -69,7 +72,8 @@ export class CrashServer {
     if (this.config.validation.allowCustomPurpose) {
       return true; // Any string is valid
     }
-    return (VALID_PURPOSES as readonly string[]).includes(purpose.toLowerCase());
+    // Use pre-computed Set for O(1) lookup instead of O(n) array includes
+    return VALID_PURPOSES_SET.has(purpose.toLowerCase());
   }
 
   public extractToolsUsed(step: CrashStep): string[] {
@@ -160,10 +164,11 @@ export class CrashServer {
       return this.branchDepthCache.get(stepNumber)!;
     }
 
-    // Check if stepNumber is in any branch's steps
-    for (const branch of this.branches.values()) {
-      const isInBranch = branch.steps.some(s => s.step_number === stepNumber);
-      if (isInBranch) {
+    // Use stepToBranchMap for O(1) lookup instead of O(n*m) loop
+    const branchId = this.stepToBranchMap.get(stepNumber);
+    if (branchId) {
+      const branch = this.branches.get(branchId);
+      if (branch) {
         // This step is in a branch, so new branch from here would be branch.depth + 1
         const depth = branch.depth + 1;
         this.branchDepthCache.set(stepNumber, depth);
@@ -186,6 +191,13 @@ export class CrashServer {
   public handleBranching(step: CrashStep): { success: boolean; error?: string } {
     if (!step.branch_from || !this.config.features.enableBranching) {
       return { success: true };
+    }
+
+    // Validate that step is not branching from itself
+    if (step.branch_from === step.step_number) {
+      const error = `Cannot branch from self (step ${step.step_number})`;
+      console.error(`⚠️ ${error}`);
+      return { success: false, error };
     }
 
     // Validate that branch_from step exists
@@ -229,11 +241,12 @@ export class CrashServer {
       console.error(`🌿 Created branch "${branchName}" from step ${step.branch_from} (depth: ${depth})`);
     }
 
-    // Add step to branch
+    // Add step to branch and update step-to-branch index
     const branch = this.branches.get(branchId);
     if (branch) {
       step.branch_id = branchId;
       branch.steps.push(step);
+      this.stepToBranchMap.set(step.step_number, branchId);
     }
 
     return { success: true };
@@ -250,11 +263,11 @@ export class CrashServer {
       return { valid: false, missing: [], circular: true };
     }
 
-    // Check for dependencies on future steps
+    // Check for dependencies on future steps (not circular, just invalid)
     const futureDeps = step.dependencies.filter(dep => dep >= step.step_number);
     if (futureDeps.length > 0) {
       console.error(`⚠️ Invalid dependencies: step ${step.step_number} cannot depend on future steps ${futureDeps.join(', ')}`);
-      return { valid: false, missing: futureDeps, circular: true };
+      return { valid: false, missing: futureDeps, circular: false };
     }
 
     // Use cached stepNumbers Set for O(1) lookups instead of rebuilding
@@ -333,8 +346,8 @@ export class CrashServer {
       return { valid: true };
     }
 
-    if (typeof step.confidence !== 'number' || isNaN(step.confidence)) {
-      return { valid: false, error: `Confidence must be a number, got ${typeof step.confidence}` };
+    if (typeof step.confidence !== 'number' || isNaN(step.confidence) || !isFinite(step.confidence)) {
+      return { valid: false, error: `Confidence must be a finite number, got ${step.confidence}` };
     }
 
     if (step.confidence < CONFIDENCE_MIN || step.confidence > CONFIDENCE_MAX) {
@@ -361,15 +374,20 @@ export class CrashServer {
     // Trim the steps array
     this.history.steps = this.history.steps.slice(-this.config.system.maxHistorySize);
 
-    // Update stepIndex and stepNumbers caches
+    // Update stepIndex, stepNumbers, and stepToBranchMap caches
     for (const stepNum of removedStepNumbers) {
       this.stepIndex.delete(stepNum);
       this.stepNumbers.delete(stepNum);
+      this.stepToBranchMap.delete(stepNum);
     }
 
     // Clean up branches that reference removed steps
     for (const [branchId, branch] of this.branches.entries()) {
       if (removedStepNumbers.has(branch.from_step)) {
+        // Also clean up stepToBranchMap for all steps in the deleted branch
+        for (const branchStep of branch.steps) {
+          this.stepToBranchMap.delete(branchStep.step_number);
+        }
         this.branches.delete(branchId);
         console.error(`🗑️ Branch "${branch.name}" removed (from_step ${branch.from_step} was trimmed)`);
       }
@@ -431,14 +449,30 @@ export class CrashServer {
             history: this.createNewHistory(),
             lastAccessed: Date.now()
           });
-          // Reset indexes for new session
-          this.stepIndex.clear();
-          this.stepNumbers.clear();
-          this.toolsUsedSet.clear();
         }
         const sessionEntry = this.sessions.get(step.session_id)!;
         sessionEntry.lastAccessed = Date.now();
         this.history = sessionEntry.history;
+
+        // Rebuild indexes from session's history (fixes desync bug)
+        this.stepIndex.clear();
+        this.stepNumbers.clear();
+        this.toolsUsedSet.clear();
+        this.stepToBranchMap.clear();
+        this.branchDepthCache.clear();
+        for (const existingStep of this.history.steps) {
+          this.stepIndex.set(existingStep.step_number, existingStep);
+          this.stepNumbers.add(existingStep.step_number);
+          // Rebuild step-to-branch map if step is in a branch
+          if (existingStep.branch_id) {
+            this.stepToBranchMap.set(existingStep.step_number, existingStep.branch_id);
+          }
+        }
+        if (this.history.metadata?.tools_used) {
+          for (const tool of this.history.metadata.tools_used) {
+            this.toolsUsedSet.add(tool);
+          }
+        }
       }
 
       // Validate dependencies (uses cached stepNumbers)
@@ -454,9 +488,9 @@ export class CrashServer {
       if (step.is_final_step === true) {
         this.history.completed = true;
       } else {
-        // Fallback to phrase detection using constant
+        // Fallback to phrase detection using pre-computed lowercase phrases
         const thoughtLower = step.thought.toLowerCase();
-        if (COMPLETION_PHRASES.some(phrase => thoughtLower.includes(phrase.toLowerCase()))) {
+        if (COMPLETION_PHRASES_LOWER.some(phrase => thoughtLower.includes(phrase))) {
           this.history.completed = true;
         }
       }
@@ -567,6 +601,7 @@ export class CrashServer {
     this.stepIndex.clear();
     this.stepNumbers.clear();
     this.toolsUsedSet.clear();
+    this.stepToBranchMap.clear();
     this.branchDepthCache.clear();
     this.stepsSinceCleanup = 0;
     this.startTime = Date.now();
