@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import { CrashStep, CrashHistory, Branch, StructuredAction } from './types.js';
+import { PURPOSE_COLORS, DEFAULT_PURPOSE_COLOR } from './constants.js';
 
 export class CrashFormatter {
   private colorEnabled: boolean;
@@ -13,19 +14,8 @@ export class CrashFormatter {
   }
 
   private getPurposeColor(purpose: string): typeof chalk.blue {
-    const colors: Record<string, typeof chalk.blue> = {
-      analysis: chalk.blue,
-      action: chalk.green,
-      reflection: chalk.yellow,
-      decision: chalk.magenta,
-      summary: chalk.cyan,
-      validation: chalk.greenBright,
-      exploration: chalk.yellowBright,
-      hypothesis: chalk.blueBright,
-      correction: chalk.redBright,
-      planning: chalk.cyanBright,
-    };
-    return colors[purpose.toLowerCase()] || chalk.white;
+    // Use static PURPOSE_COLORS from constants (avoids recreating object on every call)
+    return PURPOSE_COLORS[purpose.toLowerCase()] || DEFAULT_PURPOSE_COLOR;
   }
 
   private formatConfidence(confidence?: number): string {
@@ -223,25 +213,33 @@ export class CrashFormatter {
   formatBranchTree(history: CrashHistory): string {
     const lines: string[] = [];
     lines.push('Branch Structure:');
-    
+
+    // Pre-index branches by from_step for O(1) lookup (optimization)
+    const branchesByStep = new Map<number, Branch[]>();
+    if (history.branches) {
+      for (const branch of history.branches) {
+        const existing = branchesByStep.get(branch.from_step) || [];
+        existing.push(branch);
+        branchesByStep.set(branch.from_step, existing);
+      }
+    }
+
     // Create a visual tree of branches
     const mainSteps = history.steps.filter(s => !s.branch_id);
     lines.push('Main:');
     mainSteps.forEach(step => {
       lines.push(`  └─ Step ${step.step_number}: ${step.purpose}`);
-      
-      // Check for branches from this step
-      if (history.branches) {
-        const branchesFromStep = history.branches.filter(b => b.from_step === step.step_number);
-        branchesFromStep.forEach(branch => {
-          lines.push(`     └─ Branch: ${branch.name}`);
-          branch.steps.forEach(bStep => {
-            lines.push(`        └─ Step ${bStep.step_number}: ${bStep.purpose}`);
-          });
+
+      // Use pre-indexed lookup instead of filtering all branches
+      const branchesFromStep = branchesByStep.get(step.step_number) || [];
+      branchesFromStep.forEach(branch => {
+        lines.push(`     └─ Branch: ${branch.name}`);
+        branch.steps.forEach(bStep => {
+          lines.push(`        └─ Step ${bStep.step_number}: ${bStep.purpose}`);
         });
-      }
+      });
     });
-    
+
     return lines.join('\n');
   }
 }
