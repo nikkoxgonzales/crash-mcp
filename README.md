@@ -2,7 +2,8 @@
 
 ---
 
-# CRASH - Cascaded Reasoning with Adaptive Step Handling
+# CRASH
+## Cascaded Reasoning with Adaptive Step Handling
 
 An MCP (Model Context Protocol) server for structured, iterative reasoning. CRASH helps AI assistants break down complex problems into trackable steps with confidence tracking, revision support, and branching for exploring alternatives.
 
