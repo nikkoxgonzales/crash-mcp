@@ -55,9 +55,29 @@ export const DEFAULT_CONFIG: CrashConfig = {
   },
 };
 
+// Valid output formats for validation
+const VALID_OUTPUT_FORMATS = ['console', 'json', 'markdown'] as const;
+
+/**
+ * Safely parse an integer from environment variable with validation
+ * Returns undefined if invalid, allowing fallback to default
+ */
+function parseIntEnv(value: string | undefined, min: number = 1): number | undefined {
+  if (!value) return undefined;
+  const parsed = parseInt(value, 10);
+  if (isNaN(parsed) || parsed < min) return undefined;
+  return parsed;
+}
+
 export function loadConfig(): CrashConfig {
-  const config = { ...DEFAULT_CONFIG };
-  
+  // Deep clone to avoid mutating DEFAULT_CONFIG
+  const config: CrashConfig = {
+    validation: { ...DEFAULT_CONFIG.validation },
+    features: { ...DEFAULT_CONFIG.features },
+    display: { ...DEFAULT_CONFIG.display },
+    system: { ...DEFAULT_CONFIG.system },
+  };
+
   // Override from environment variables
   if (process.env.CRASH_STRICT_MODE === 'true') {
     config.validation.strictMode = true;
@@ -65,25 +85,37 @@ export function loadConfig(): CrashConfig {
     config.validation.requireRationalePrefix = true;
     config.validation.allowCustomPurpose = false;
   }
-  
-  if (process.env.MAX_HISTORY_SIZE) {
-    config.system.maxHistorySize = parseInt(process.env.MAX_HISTORY_SIZE);
+
+  // Parse MAX_HISTORY_SIZE with validation (must be >= 1)
+  const maxHistorySize = parseIntEnv(process.env.MAX_HISTORY_SIZE, 1);
+  if (maxHistorySize !== undefined) {
+    config.system.maxHistorySize = maxHistorySize;
   }
-  
+
+  // Validate output format against allowed values
   if (process.env.CRASH_OUTPUT_FORMAT) {
-    config.display.outputFormat = process.env.CRASH_OUTPUT_FORMAT as any;
+    const format = process.env.CRASH_OUTPUT_FORMAT.toLowerCase();
+    if (VALID_OUTPUT_FORMATS.includes(format as typeof VALID_OUTPUT_FORMATS[number])) {
+      config.display.outputFormat = format as typeof VALID_OUTPUT_FORMATS[number];
+    } else {
+      console.error(`⚠️ Invalid CRASH_OUTPUT_FORMAT '${process.env.CRASH_OUTPUT_FORMAT}', using default 'console'. Valid options: ${VALID_OUTPUT_FORMATS.join(', ')}`);
+    }
   }
-  
+
   if (process.env.CRASH_NO_COLOR === 'true') {
     config.display.colorOutput = false;
   }
 
-  if (process.env.CRASH_SESSION_TIMEOUT) {
-    config.system.sessionTimeout = parseInt(process.env.CRASH_SESSION_TIMEOUT);
+  // Parse CRASH_SESSION_TIMEOUT with validation (must be >= 1 minute)
+  const sessionTimeout = parseIntEnv(process.env.CRASH_SESSION_TIMEOUT, 1);
+  if (sessionTimeout !== undefined) {
+    config.system.sessionTimeout = sessionTimeout;
   }
 
-  if (process.env.CRASH_MAX_BRANCH_DEPTH) {
-    config.system.maxBranchDepth = parseInt(process.env.CRASH_MAX_BRANCH_DEPTH);
+  // Parse CRASH_MAX_BRANCH_DEPTH with validation (must be >= 1)
+  const maxBranchDepth = parseIntEnv(process.env.CRASH_MAX_BRANCH_DEPTH, 1);
+  if (maxBranchDepth !== undefined) {
+    config.system.maxBranchDepth = maxBranchDepth;
   }
 
   if (process.env.CRASH_ENABLE_SESSIONS === 'true') {
