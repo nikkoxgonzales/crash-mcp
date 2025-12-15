@@ -20,8 +20,6 @@ export interface CrashConfig {
   display: {
     colorOutput: boolean;
     outputFormat: 'console' | 'json' | 'markdown';
-    showProgressBar: boolean;
-    verboseLogging: boolean;
   };
   
   // System settings
@@ -49,8 +47,6 @@ export const DEFAULT_CONFIG: CrashConfig = {
   display: {
     colorOutput: true,
     outputFormat: 'console',
-    showProgressBar: false,
-    verboseLogging: false,
   },
   system: {
     maxHistorySize: 100,
@@ -81,6 +77,18 @@ export function loadConfig(): CrashConfig {
   if (process.env.CRASH_NO_COLOR === 'true') {
     config.display.colorOutput = false;
   }
-  
+
+  if (process.env.CRASH_SESSION_TIMEOUT) {
+    config.system.sessionTimeout = parseInt(process.env.CRASH_SESSION_TIMEOUT);
+  }
+
+  if (process.env.CRASH_MAX_BRANCH_DEPTH) {
+    config.system.maxBranchDepth = parseInt(process.env.CRASH_MAX_BRANCH_DEPTH);
+  }
+
+  if (process.env.CRASH_ENABLE_SESSIONS === 'true') {
+    config.features.enableSessions = true;
+  }
+
   return config;
 }
