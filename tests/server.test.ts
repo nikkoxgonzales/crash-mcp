@@ -189,13 +189,14 @@ describe('CrashServer', () => {
       expect(result.circular).toBe(true);
     });
 
-    it('should detect future dependencies as invalid', () => {
+    it('should detect future dependencies as invalid (not circular)', () => {
       const server = new CrashServer(createConfig());
       const step = createBaseStep({ step_number: 1, dependencies: [5, 10] });
 
       const result = server.validateDependencies(step);
       expect(result.valid).toBe(false);
-      expect(result.circular).toBe(true);
+      // Future dependencies are invalid but NOT circular (semantic correction)
+      expect(result.circular).toBe(false);
     });
 
     it('should pass when all dependencies exist', async () => {
@@ -667,6 +668,135 @@ describe('CrashServer', () => {
 
       expect(exported).toContain('[Step 1/3]');
       expect(exported).toContain('Context:');
+    });
+  });
+
+  describe('session index synchronization', () => {
+    it('should rebuild indexes when returning to existing session', async () => {
+      const server = new CrashServer(createConfig({
+        features: { ...DEFAULT_CONFIG.features, enableSessions: true }
+      }));
+
+      // Create session A with steps 1, 2, 3
+      await server.processStep(createBaseStep({ step_number: 1, session_id: 'session-a' }));
+      await server.processStep(createBaseStep({ step_number: 2, session_id: 'session-a' }));
+      await server.processStep(createBaseStep({ step_number: 3, session_id: 'session-a' }));
+
+      // Switch to session B
+      await server.processStep(createBaseStep({ step_number: 1, session_id: 'session-b' }));
+
+      // Return to session A and add step 4 with dependency on step 2
+      // This should work because indexes should be rebuilt from session A's history
+      const result = await server.processStep(createBaseStep({
+        step_number: 4,
+        session_id: 'session-a',
+        dependencies: [2] // Should find step 2 from session A
+      }));
+
+      expect(result.isError).toBeUndefined();
+      const sessions = server.getSessions();
+      const sessionA = sessions.get('session-a')!;
+      expect(sessionA.history.steps.length).toBe(4);
+    });
+  });
+
+  describe('confidence edge cases', () => {
+    it('should reject Infinity confidence', async () => {
+      const server = new CrashServer(createConfig());
+
+      const result = await server.processStep(createBaseStep({
+        step_number: 1,
+        confidence: Infinity
+      }));
+
+      expect(result.isError).toBe(true);
+      const response = JSON.parse(result.content[0].text);
+      expect(response.error).toContain('finite number');
+    });
+
+    it('should reject -Infinity confidence', async () => {
+      const server = new CrashServer(createConfig());
+
+      const result = await server.processStep(createBaseStep({
+        step_number: 1,
+        confidence: -Infinity
+      }));
+
+      expect(result.isError).toBe(true);
+      const response = JSON.parse(result.content[0].text);
+      expect(response.error).toContain('finite number');
+    });
+
+    it('should reject NaN confidence', async () => {
+      const server = new CrashServer(createConfig());
+
+      const result = await server.processStep(createBaseStep({
+        step_number: 1,
+        confidence: NaN
+      }));
+
+      expect(result.isError).toBe(true);
+      const response = JSON.parse(result.content[0].text);
+      expect(response.error).toContain('finite number');
+    });
+  });
+
+  describe('branch self-reference', () => {
+    it('should reject branching from self', async () => {
+      const server = new CrashServer(createConfig());
+
+      // First add a step so step 1 exists
+      await server.processStep(createBaseStep({ step_number: 1 }));
+
+      // Try to branch from self (step 2 branching from step 2)
+      const result = await server.processStep(createBaseStep({
+        step_number: 2,
+        branch_from: 2, // Self-reference - should fail
+        branch_name: 'Self-branch'
+      }));
+
+      expect(result.isError).toBe(true);
+      const response = JSON.parse(result.content[0].text);
+      expect(response.error).toContain('Cannot branch from self');
+    });
+  });
+
+  describe('integration - complex multi-feature step', () => {
+    it('should handle step with revision, branching, confidence, and dependencies', async () => {
+      const server = new CrashServer(createConfig());
+
+      // Setup: Create initial steps
+      await server.processStep(createBaseStep({ step_number: 1 }));
+      await server.processStep(createBaseStep({ step_number: 2 }));
+      await server.processStep(createBaseStep({ step_number: 3 }));
+
+      // Complex step: branches from step 2, revises step 1, has confidence, depends on step 3
+      const result = await server.processStep(createBaseStep({
+        step_number: 4,
+        branch_from: 2,
+        branch_name: 'Alternative approach',
+        revises_step: 1,
+        revision_reason: 'Found better approach',
+        confidence: 0.85,
+        dependencies: [3],
+        tools_used: ['Read', 'Grep', 'Edit']
+      }));
+
+      expect(result.isError).toBeUndefined();
+
+      const response = JSON.parse(result.content[0].text);
+      expect(response.step_number).toBe(4);
+      expect(response.confidence).toBe(0.85);
+      expect(response.revised_step).toBe(1);
+      expect(response.branch).toBeDefined();
+      expect(response.branch.name).toBe('Alternative approach');
+
+      const history = server.getHistory();
+      expect(history.metadata?.revisions_count).toBe(1);
+      expect(history.metadata?.branches_created).toBe(1);
+      expect(history.metadata?.tools_used).toContain('Read');
+      expect(history.metadata?.tools_used).toContain('Grep');
+      expect(history.metadata?.tools_used).toContain('Edit');
     });
   });
 });
