@@ -1,6 +1,6 @@
 {
   "name": "crash-mcp",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "MCP server for CRASH - Cascaded Reasoning with Adaptive Step Handling",
   "type": "module",
   "main": "dist/index.js",
